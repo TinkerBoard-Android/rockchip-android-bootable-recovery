@@ -1810,6 +1810,20 @@ int main(int argc, char **argv) {
     }
     printf("\n");
 
+#ifdef USE_AUTO_USB_UPDATE
+    printf("Auto update package from USB.\n");
+    if(argc <= 1){
+        rksdboot.ensure_usb_mounted();
+        if(access(usb_rkpackage, F_OK) == 0) {
+            printf("Auto : %s.\n", usb_rkpackage);
+            update_package = usb_rkpackage;
+        }else if(access(usb_rkimage, F_OK) == 0){
+            printf("Auto : %s.\n", usb_rkimage);
+            update_rkimage = usb_rkimage;
+        }
+    }
+#endif
+
     if (update_package) {
         // For backwards compatibility on the cache partition only, if
         // we're given an old 'root' path "CACHE:foo", change it to
@@ -1917,6 +1931,9 @@ int main(int argc, char **argv) {
             bAutoUpdateComplete = false;
         }else{
             bAutoUpdateComplete = true;
+            #ifdef WIPE_AFTER_UPDATE
+            bWipeAfterUpdate = true;
+            #endif
         }
         /*
         if(demo_copy_path){

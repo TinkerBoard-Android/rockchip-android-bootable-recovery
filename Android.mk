@@ -70,6 +70,11 @@ ifeq ($(strip $(REDIRECT_LOG_TO)),CACHE)
   LOCAL_CFLAGS += -DLogToCache
 endif
 
+ifeq ($(strip $(RECOVERY_AUTO_USB_UPDATE)),true)
+  $(warning *** AUTO_USB_UPDATE)
+  LOCAL_CFLAGS += -DUSE_AUTO_USB_UPDATE
+endif
+
 ifeq ($(TARGET_USERIMAGES_USE_F2FS),true)
 ifeq ($(HOST_OS),linux)
 LOCAL_REQUIRED_MODULES := mkfs.f2fs
@@ -78,6 +83,11 @@ endif
 
 ifeq ($(PRODUCT_BUILD_MODULE),px3car)
   LOCAL_CFLAGS += -DCHECK_SYSTEM_PARTITION
+endif
+
+ifeq ($(strip $(RECOVERY_SDBOOT_FORMATE_DATA)),true)
+  $(warning *** WIPE_AFTER_UPDATE)
+  LOCAL_CFLAGS += -DWIPE_AFTER_UPDATE
 endif
 
 RECOVERY_API_VERSION := 3
