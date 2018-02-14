@@ -1407,6 +1407,13 @@ prompt_and_wait(Device* device, int status) {
                 }
 
                 break;
+            case Device::RECOVERY_SYSTEM:
+                ui->Print("Recovery Android from /backup.\n");
+                if(ensure_path_mounted("/backup") != -1){
+                    bool is_wipe_cache;
+                    int result = install_package("/backup/update.zip", &is_wipe_cache, TEMPORARY_INSTALL_FILE, false, 0/*retry_count*/);
+                }
+                break;
         }
     }
 }
@@ -1670,6 +1677,7 @@ int main(int argc, char **argv) {
     printf("Starting recovery (pid %d) on %s", getpid(), ctime(&start));
 
     load_volume_table();
+    setFlashPoint();
     SDBoot rksdboot;
     has_cache = volume_for_path(CACHE_ROOT) != nullptr;
 
@@ -1680,7 +1688,6 @@ int main(int argc, char **argv) {
     }
 
     dumpCmdArgs(argc, argv);
-    setFlashPoint();
 
 #ifdef LogToSDCard
     rksdboot.ensure_sd_mounted();
