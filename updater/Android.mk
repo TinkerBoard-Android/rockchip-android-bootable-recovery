@@ -62,6 +62,10 @@ LOCAL_STATIC_LIBRARIES += libtune2fs $(tune2fs_static_libraries)
 
 LOCAL_C_INCLUDES += external/e2fsprogs/misc
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/..
+LOCAL_C_INCLUDES += \
+    system/core/libsoarse \
+    system/core/libsoarse/include/sparse
+LOCAL_STATIC_LIBRARIES += libsparse_static
 
 # Each library in TARGET_RECOVERY_UPDATER_LIBS should have a function
 # named "Register_<libname>()".  Here we emit a little C function that

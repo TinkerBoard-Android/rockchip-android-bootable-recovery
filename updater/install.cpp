@@ -62,6 +62,8 @@
 
 #include "rkupdate/Upgrade.h"
 
+#include <sparse/sparse.h>
+
 #ifdef USE_EXT4
 #include "make_ext4fs.h"
 #include "wipe.h"
@@ -1920,6 +1922,10 @@ Value* WriteRawSparseImageFn(const char* name, State* state, int argc, Expr* arg
     bool loader_ok;
     const ZipEntry* loader_entry;
     ZipArchive* zip = ((UpdaterInfo*)(state->cookie))->package_zip;
+    int in;
+    int out;
+    struct sparse_file *s;
+    char device[100];
 
     if(argc != 2){
         printf("WriteRawSparseImageFn argc error!\n");
@@ -1927,6 +1933,7 @@ Value* WriteRawSparseImageFn(const char* name, State* state, int argc, Expr* arg
         std::string partition_name(argv[0]->name); //vendor
         std::string src_name(argv[1]->name);       //vendor.img
         std::string des_name("/tmp/");        ///tmp/vendor.img
+        std::string des_name_ext("/tmp/tmp_vendor.img"); //unsparse vendor image
         des_name = des_name.append(src_name);
 
 
@@ -1952,8 +1959,70 @@ Value* WriteRawSparseImageFn(const char* name, State* state, int argc, Expr* arg
             close(bootfd);
             printf("Create %s tmp success %s\n", src_name.c_str(), des_name.c_str());
 
+            // open input file sparse image "/tmp/vendor0.img"
+            in = open(des_name.c_str(), O_RDONLY | O_BINARY);
+            if (in < 0) {
+                printf("Cannot open input file %s\n", des_name.c_str());
+                goto done;
+            }
+
+            // open output file unsparse image "/tmp/tmp_vendor.img"
+            out = open(des_name_ext.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0664);
+            if (out < 0) {
+                printf("Cannot open output file %s\n", des_name_ext.c_str());
+                goto done;
+            }
+
+            s = sparse_file_import(in, true, false);
+            if (!s) {
+                    printf("Failed to read sparse file %s\n", des_name.c_str());
+                    goto done;
+            }
+
+            if (lseek(out, 0, SEEK_SET) == -1) {
+                    printf("lseek failed");
+                    goto done;
+            }
+
+            if (sparse_file_write(s, out, false, false, false) < 0) {
+                    printf("Cannot write output file\n");
+                    goto done;
+            }
+            sparse_file_destroy(s);
+            close(in);
+            close(out);
+            printf("create /tmp/tmp_vendor.img success\n");
+
+            //write unsparse vendor image to mmcblk /vendor
+            transformPath(partition_name.c_str(), device);
+            printf("partition_name = %s\n", partition_name.c_str()); // vendor0
+            printf("device = %s\n", device);  // /dev/block/platform/ff0c0000.dwmmc/by-name/vendor0
+            FILE *dest_partition = fopen(device, "wb");
+            if(dest_partition == NULL){
+                printf("%s: no emmc partition named \"%s\"\n", name, device);
+                goto done;
+            }
+
+            char* filename = "/tmp/tmp_vendor.img";
+            printf("filename = %s\n", filename); // /tmp/tmp_vendor.img
+            FILE* f = ota_fopen(filename, "rb");
+            if (f == NULL) {
+                printf("%s: can't open %s: %s\n", name, filename, strerror(errno));
+                goto done;
+            }
+            Success = true;
+            char* buffer = reinterpret_cast<char*>(malloc(BUFSIZ));
+            int read;
+            while (Success && (read = ota_fread(buffer, 1, BUFSIZ, f)) > 0) {
+                int wrote = fwrite(buffer, 1, read, dest_partition);
+                Success = Success && (wrote == read);
+            }
+            free(buffer);
+            fclose(f);
+            fflush(dest_partition);
+
             //update
-            Success = do_rk_sparse_update(partition_name.c_str(), des_name.c_str());
+            //Success = do_rk_sparse_update(partition_name.c_str(), des_name.c_str());
         }
     }
 done:
