@@ -410,6 +410,7 @@ int format_volume(const char* volume, const char* directory) {
 
   // If there's a key_loc that looks like a path, it should be a block device for storing encryption
   // metadata. Wipe it too.
+#ifndef AB_OTA_UPDATER
   if (v->key_loc != nullptr && v->key_loc[0] == '/') {
     LOG(INFO) << "Wiping " << v->key_loc;
     int fd = open(v->key_loc, O_WRONLY | O_CREAT, 0644);
@@ -420,6 +421,7 @@ int format_volume(const char* volume, const char* directory) {
     wipe_block_device(fd, get_file_size(fd));
     close(fd);
   }
+#endif
 
   int64_t length = 0;
   if (v->length > 0) {
