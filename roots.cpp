@@ -253,6 +253,9 @@ int ensure_path_mounted_at(const char* path, const char* mount_point) {
                 blk_device = getenv(SD_POINT_NAME);
             }
         }
+        if(NULL == blk_device){
+            blk_device = v->blk_device;
+        }
         int result = mount(v->blk_device, v->mount_point, v->fs_type,
                            MS_NOATIME | MS_NODEV | MS_NODIRATIME, "shortname=mixed,utf8");
         if (result == 0) return 0;
@@ -268,6 +271,11 @@ int ensure_path_mounted_at(const char* path, const char* mount_point) {
         result = mount(v->blk_device, v->mount_point, "ntfs",
                        MS_NOATIME | MS_NODEV | MS_NODIRATIME, "");
         if (result == 0) return 0;
+        if (blk_device !=NULL){
+            result = mount(blk_device, v->mount_point, "ntfs",
+                           MS_NOATIME | MS_NODEV | MS_NODIRATIME, "");
+            if (result == 0) return 0;
+        }
 
         char *sec_dev = v->fs_options;
         if(strcmp("/mnt/external_sd", v->mount_point) == 0){
