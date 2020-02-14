@@ -115,6 +115,7 @@ static const char *LOCALE_FILE = "/cache/recovery/last_locale";
 static const char *FLAG_FILE = "/cache/recovery/last_flag";
 static const char *CONVERT_FBE_DIR = "/tmp/convert_fbe";
 static const char *CONVERT_FBE_FILE = "/tmp/convert_fbe/convert_fbe";
+static const char *FOTA_STATUS_FILE = "/cache/recovery/last_fota_status";
 static const char *CACHE_ROOT = "/cache";
 static const char *DATA_ROOT = "/data";
 static const char *SDCARD_ROOT = "/mnt/external_sd";
@@ -136,6 +137,7 @@ static const int BATTERY_OK_PERCENTAGE = 20;
 static const int BATTERY_WITH_CHARGER_OK_PERCENTAGE = 15;
 constexpr const char* RECOVERY_WIPE = "/etc/recovery.wipe";
 
+FILE* fota_status_log = NULL;
 RecoveryUI* ui = NULL;
 static const char* locale = "en_US";
 char* stage = NULL;
@@ -532,7 +534,7 @@ static void copy_logs() {
     chown(LOG_FILE, 1000, 1000);   // system user
     chmod(LAST_KMSG_FILE, 0600);
     chown(LAST_KMSG_FILE, 1000, 1000);   // system user
-    chmod(LAST_LOG_FILE, 0640);
+    chmod(LAST_LOG_FILE, 0644);
     chmod(LAST_INSTALL_FILE, 0644);
     sync();
 }
@@ -1860,6 +1862,7 @@ int main(int argc, char **argv) {
     int status = INSTALL_SUCCESS;
 
     if (update_package != NULL) {
+        printf("Install package %s\n", update_package);
         // It's not entirely true that we will modify the flash. But we want
         // to log the update attempt since update_package is non-NULL.
         modified_flash = true;
@@ -1881,6 +1884,8 @@ int main(int argc, char **argv) {
             if(reallyPath == NULL)
                 reallyPath = update_package;
             startLed();
+            fota_status_log = fopen_path(FOTA_STATUS_FILE, "w");
+            printf("update_package path=%s\n", update_package);
             status = install_package(reallyPath, &should_wipe_cache,
                                      TEMPORARY_INSTALL_FILE, true, retry_count);
             if (status == INSTALL_SUCCESS && should_wipe_cache) {
@@ -1914,6 +1919,13 @@ int main(int argc, char **argv) {
                 }
             }else{
                 bAutoUpdateComplete=true;
+            }
+            if (fota_status_log) {
+                fprintf(stdout, "fota_status_log recording\n");
+                fputs(status == INSTALL_SUCCESS ? "200" : "410", fota_status_log);
+                fputc('\n', fota_status_log);
+                fclose(fota_status_log);
+                chmod(FOTA_STATUS_FILE, 0644);
             }
         }
     }else if (update_rkimage != NULL){
