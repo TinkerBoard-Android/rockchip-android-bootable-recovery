@@ -74,6 +74,7 @@ static constexpr const char* COMMAND_FILE = "/cache/recovery/command";
 static constexpr const char* LAST_KMSG_FILE = "/cache/recovery/last_kmsg";
 static constexpr const char* LAST_LOG_FILE = "/cache/recovery/last_log";
 static constexpr const char* LOCALE_FILE = "/cache/recovery/last_locale";
+static const char *FOTA_STATUS_FILE = "/cache/recovery/last_fota_status";
 static const char *FLAG_FILE = "/cache/recovery/last_flag";
 static char updatepath[128] = "\0";
 bool bAutoUpdateComplete = false;
@@ -85,6 +86,7 @@ static constexpr const char* CACHE_ROOT = "/cache";
 // into target_files.zip. Assert the version defined in code and in Android.mk are consistent.
 static_assert(kRecoveryApiVersion == RECOVERY_API_VERSION, "Mismatching recovery API versions.");
 
+FILE* fota_status_log = NULL;
 static bool save_current_log = false;
 std::string stage;
 const char* reason = nullptr;
@@ -1359,6 +1361,7 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
   printf("\n");
 
   if (update_package != nullptr) {
+    printf("Install package %s\n", update_package);
     // It's not entirely true that we will modify the flash. But we want
     // to log the update attempt since update_package is non-NULL.
     save_current_log = true;
@@ -1398,6 +1401,8 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
       }
       else
       {
+        fota_status_log = fopen_path_legacy(FOTA_STATUS_FILE, "w");
+        printf("update_package path=%s\n", update_package);
         printf("install_package from block.map, reallyPath=%s \n", reallyPath);
         ui->Print("install_package from block.map, reallyPath=%s \n", reallyPath);
         status = install_package(reallyPath, should_wipe_cache, true, retry_count, ui);
@@ -1432,6 +1437,13 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
         }
       }else{
           bAutoUpdateComplete=true;
+      }
+      if (fota_status_log) {
+          fprintf(stdout, "fota_status_log recording\n");
+          fputs(status == INSTALL_SUCCESS ? "200" : "410", fota_status_log);
+          fputc('\n', fota_status_log);
+          fclose(fota_status_log);
+          chmod(FOTA_STATUS_FILE, 0644);
       }
     }
   }else if (sdboot_update_package != nullptr) {
