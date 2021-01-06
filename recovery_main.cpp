@@ -62,8 +62,8 @@
 #include "rkutility/rktools.h"
 #include "rkutility/sdboot.h"
 
-
-
+extern void SetMiscBlockDeviceForTest(std::string_view misc_device);
+extern std::string get_misc_blk_device(std::string* err);
 
 static constexpr const char* COMMAND_FILE = "/cache/recovery/command";
 static constexpr const char* LOCALE_FILE = "/cache/recovery/last_locale";
@@ -385,6 +385,17 @@ int main(int argc, char** argv) {
   SDBoot rksdboot;
 
   has_cache = volume_for_mount_point(CACHE_ROOT) != nullptr;
+
+  if(is_boot_from_sd()){
+    SetMiscBlockDeviceForTest("/dev/block/mmcblk1p4");
+    printf("set misc blk to /dev/block/mmcblk1p4\n");
+  } else {
+    SetMiscBlockDeviceForTest("/dev/block/mmcblk2p4");
+    printf("set misc blk to /dev/block/mmcblk2p4\n");
+  }
+  std::string err;
+  std::string misc_blk_device = get_misc_blk_device(&err);
+  LOG(ERROR) << "misc blk = " << misc_blk_device ;
 
   //std::vector<std::string> args = get_args(argc, argv);
   std::vector<std::string> args;

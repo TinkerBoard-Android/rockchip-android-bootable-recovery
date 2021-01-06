@@ -40,7 +40,7 @@ void SetMiscBlockDeviceForTest(std::string_view misc_device) {
   g_misc_device_for_test = misc_device;
 }
 
-static std::string get_misc_blk_device(std::string* err) {
+std::string get_misc_blk_device(std::string* err) {
   if (!g_misc_device_for_test.empty()) {
     return g_misc_device_for_test;
   }
