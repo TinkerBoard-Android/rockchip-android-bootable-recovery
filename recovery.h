@@ -25,5 +25,4 @@
 
 Device::BuiltinAction start_recovery(Device* device, const std::vector<std::string>& args, SDBoot* prksdboot);
 void ensure_sd_mounted(SDBoot* prksdboot);
-int is_boot_from_sd(void);
 

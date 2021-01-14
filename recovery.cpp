@@ -1087,7 +1087,7 @@ char* check_media_package(const char *path, SDBoot* prksdboot, RecoveryUI* ui){
     return NULL;
 }
 
-int is_boot_from_sd(){
+static int is_boot_from_sd(){
     char param[1024];
     int fd, ret;
     char *s=NULL;
