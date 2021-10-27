@@ -182,15 +182,22 @@ void WipeFrp() {
   }
 }
 
-int ResizeData(char *boot_blk){
+int ResizeData(Device* device, char *boot_blk){
   Volume* v11 = volume_for_mount_point("/data");
   int result = 0;
+  RecoveryUI* ui = device->GetUI();
+  ui->Print("\n-- Resize data...\n");
 
   if (nullptr == v11){
     printf("ResizeData failed! v11 is NULL \n");
+	ui->Print("\n-- Resize failed v11 is NULL...\n");
     return -1;
   }
 
+  ui->SetBackground(RecoveryUI::ERASING);
+  ui->SetProgressType(RecoveryUI::INDETERMINATE);
+
+  ui->Print("Resizing %s...\n", (v11->blk_device).c_str());
   printf("ResizeData blk_device=%s \n", (v11->blk_device).c_str());
   if(strcmp((v11->fs_type).c_str(), (char*)"f2fs") == 0){
     if(rk_check_and_resizefs_f2fs((v11->blk_device).c_str(), boot_blk)) {
@@ -204,5 +211,6 @@ int ResizeData(char *boot_blk){
     }
   }
 
+  ui->Print("\n-- Resize Complete...\n");
   return result;
 }

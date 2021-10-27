@@ -1339,7 +1339,7 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
       else
         strcat(boot_blk, getenv(EMMC_POINT_NAME));
 
-      if (ResizeData(boot_blk) != 0){
+      if (ResizeData(device, boot_blk) != 0){
         status = INSTALL_ERROR;
         printf("ResizeData failed! \n");
       }
