@@ -232,7 +232,7 @@ void copy_logs(bool save_current_log) {
   chown(LOG_FILE, AID_SYSTEM, AID_SYSTEM);
   chmod(LAST_KMSG_FILE, 0600);
   chown(LAST_KMSG_FILE, AID_SYSTEM, AID_SYSTEM);
-  chmod(LAST_LOG_FILE, 0640);
+  chmod(LAST_LOG_FILE, 0644);
   chmod(LAST_INSTALL_FILE, 0644);
   chown(LAST_INSTALL_FILE, AID_SYSTEM, AID_SYSTEM);
   sync();
