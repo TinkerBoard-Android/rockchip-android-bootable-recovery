@@ -154,7 +154,7 @@ cc_binary {
     recovery: true,
 
     cppflags: [
-        "-DLogToSerial",
+        "-DLogToCache",
     ],
 
     defaults: [
