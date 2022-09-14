@@ -1124,7 +1124,7 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
         }
         break;
       }
-      case 'w'+'a': { should_wipe_all = true; should_wipe_data = true; should_wipe_cache = true;} break;
+      case 'w'+'a': { should_wipe_all = true; should_wipe_data = true; should_wipe_cache = true; resize_partition = 1;} break;
       case 'f': factory_mode = optarg; break;
       case 'p'+'t': factory_mode = optarg; break;
 	  case 'f'+'w': //fw_update
