@@ -1124,7 +1124,7 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
         }
         break;
       }
-      case 'w'+'a': { should_wipe_all = true; should_wipe_data = true; should_wipe_cache = true; resize_partition = 1;} break;
+      case 'w'+'a': { should_wipe_all = true; should_wipe_data = true; should_wipe_cache = true; resize_partition = true;} break;
       case 'f': factory_mode = optarg; break;
       case 'p'+'t': factory_mode = optarg; break;
 	  case 'f'+'w': //fw_update
@@ -1317,16 +1317,10 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
     save_current_log = true;
     CHECK(device->GetReason().has_value());
     bool convert_fbe = device->GetReason().value() == "convert_fbe";
-    if (resize_partition != 1){
-      printf("do WipeData \n");
-      if (!WipeData(device, convert_fbe)) {
-        status = INSTALL_ERROR;
-      }
-    }else{
+    char boot_blk[32] = "\0";
+    if (resize_partition){
       printf("resize /data \n");
       ui->Print("resize /data \n");
-
-      char boot_blk[32] = "\0";
       if(is_boot_from_sd())
         strcat(boot_blk, getenv(SD_POINT_NAME_2));
       else
@@ -1334,7 +1328,13 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
 
       if (ResizeData(device, boot_blk) != 0){
         status = INSTALL_ERROR;
-        printf("ResizeData failed! \n");
+        printf("ResizeDataSd failed! \n");
+      }
+    }
+    if (should_wipe_data){
+      printf("do WipeData \n");
+      if (!WipeData(device, convert_fbe)) {
+        status = INSTALL_ERROR;
       }
     }
     if(should_wipe_all) {
