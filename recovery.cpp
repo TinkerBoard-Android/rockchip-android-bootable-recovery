@@ -1329,6 +1329,11 @@ Device::BuiltinAction start_recovery(Device* device, const std::vector<std::stri
         status = INSTALL_ERROR;
         printf("ResizeData failed! \n");
       }
+
+      printf("do WipeData after resizing \n");
+      if (!WipeData(device, convert_fbe)) {
+        status = INSTALL_ERROR;
+      }
     }
     if(should_wipe_all) {
       WipeFrp();
